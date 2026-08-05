@@ -1,22 +1,22 @@
-#GenAI RAG Server — Security Hardening
+# GenAI RAG Server — Security Hardening
 
 This document covers the security features implemented for the Node.js/Express RAG (Retrieval-Augmented Generation) server, which uses Gemini for embeddings and answer generation over an indexed PDF.
 
 Overview
 
-##The server originally exposed two unauthenticated, unrate-limited endpoints:
+## The server originally exposed two unauthenticated, unrate-limited endpoints:
 
 POST /api/index   → re-embeds the source PDF and rebuilds the vector store
 POST /api/ask     → embeds a user question, retrieves top-k chunks, and calls Gemini to answer
 
 Both endpoints call paid Gemini APIs (embeddings + generation) with no access control, meaning anyone who discovered the URL could run up API costs indefinitely or repeatedly trigger expensive re-indexing. This was the highest-priority risk in the project, so it was addressed first with API key authentication and route-level rate limiting. A query sanitization layer was also added to reduce prompt injection risk.
 
-##Features Implemented
-###1. API Key Authentication (middleware/auth.js)
+## Features Implemented
+### 1. API Key Authentication (middleware/auth.js)
 
 Purpose: Prevent unauthorized clients from calling the Gemini-backed endpoints at all.
 
-###How it works:
+### How it works:
 
 Reads the x-api-key header from incoming requests.
 Hashes both the provided key and the expected key (process.env.SERVER_API_KEY) with SHA-256, then compares the digests using crypto.timingSafeEqual.
@@ -29,7 +29,7 @@ The same message is used for both "no key sent" and "wrong key sent" so an attac
 
 Applied to: POST /api/index, POST /api/ask
 
-##2. Rate Limiting (middleware/rateLimiter.js)
+## 2. Rate Limiting (middleware/rateLimiter.js)
 
 Purpose: Cap request volume per client to prevent cost-exhaustion and abuse, even from an authenticated caller (e.g. a compromised or misbehaving key).
 
@@ -83,7 +83,7 @@ Verification
 
 Automated middleware tests confirm all cases behave as expected:
 
-###Test	Expected	Result
+### Test	Expected	Result
 Missing API key	401	✅ Pass
 Invalid API key	401	✅ Pass
 Valid API key	  200	✅ Pass
