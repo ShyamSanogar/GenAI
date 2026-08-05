@@ -89,13 +89,15 @@ Invalid API key	401	✅ Pass
 Valid API key	  200	✅ Pass
 /api/index — 3rd request within 1 min (limit: 2)	429	✅ Pass
 /api/ask — 11th request within 1 min (limit: 10)	429	✅ Pass
-Known Limitations
+
+### Known Limitations
 In-memory rate limiting: the default express-rate-limit store resets on server restart and does not share state across multiple server instances/processes. Fine for a single-instance deployment; a horizontally scaled deployment would need a shared store (e.g. Redis-backed) instead.
 Regex-based query sanitization is a denylist, not a true classifier: it catches known jailbreak phrasings but can be bypassed by novel rewordings. It should be treated as one defensive layer, not a complete solution.
 Indirect prompt injection is not yet addressed: sanitization only covers the user's query. Content extracted from the source PDF (extractText.js → chunkText.js) is not sanitized before being used as context. If the PDF source isn't fully trusted, injected instructions inside the document itself could still reach the model.
 Transport security: the API key is sent as a plain header. This is only safe over HTTPS — the app should not be deployed over plain HTTP in any environment beyond local testing.
 Error response sanitization: current error handling returns err.message directly to the client in some paths, which can leak internal details (e.g. raw Gemini API error text). Recommended next step: log full errors server-side and return a generic message to callers.
-Suggested Next Steps
+
+## Suggested Next Steps
 1.Sanitize error responses returned to clients (log internally, return generic messages).
 2.Sanitize/validate PDF-extracted content to mitigate indirect prompt injection.
 3.Move to a persistent/shared rate-limit store if deploying beyond a single instance.
